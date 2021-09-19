@@ -144,20 +144,61 @@ Definition initstate :=
         lastview := 0
     |}.
 
-Definition execute_internal_ls (i : InternalEvent) (ls : LocalState) : option LocalState. Admitted.
 
+Definition execute_internal_ls (i : InternalEvent) (ls : LocalState) : option LocalState :=
+    match execute_internal i (regstate ls) with
+    | Some rs => Some (ls <|regstate := rs|>)
+    | _ => None
+    end.
+    
 Lemma execute_internal_ls_regstate :
     forall i ls ls' (Hls : execute_internal_ls i ls = Some ls'),
-         execute_internal i (regstate ls) = Some (regstate ls').
-Admitted.
+    execute_internal i (regstate ls) = Some (regstate ls').
+Proof.
+intros. unfold execute_internal_ls in *.
+remember (execute_internal i (regstate ls)) as rs.
+destruct rs. inversion Hls. reflexivity.
+discriminate.
+Qed.
+Fixpoint previous_promise (promises : View -> option Promise) (v : View) (addr : Address) : View :=
+match v with
+| 0 => 0
+| S v' =>
+    match promises v' with
+    | Some (WRITE tid val addr') => if EqNat.beq_nat addr addr' then v' else previous_promise promises v' addr
+    | _ => previous_promise promises v' addr
+    end
+end.
 
-Definition previous_promise (promises : View -> option Promise) (v : View) (addr : Address) : View. Admitted.
+Lemma previous_promise_le_v :
+forall pl v addr,  previous_promise pl v addr <= v.
+Proof.
+intros. induction v.
+- reflexivity.
+- simpl. destruct (pl v).
+    destruct p. destruct (EqNat.beq_nat addr a).
+    omega. omega. omega. omega. omega.
+Qed.
 
-Lemma previous_promise_incr : 
+Lemma previous_promise_incr :
     forall pl view p lb addr
         (Hmask : pl view = None),
         previous_promise (update pl view (Some p)) lb addr >= previous_promise pl lb addr.
-Admitted.
+Proof.
+intros. induction lb.
+- simpl. omega.
+- destruct (Peano_dec.eq_nat_dec lb view).
+    + subst lb. simpl.
+    rewrite update_same. rewrite Hmask.
+    destruct p.
+    * destruct (EqNat.beq_nat addr a). apply previous_promise_le_v. apply IHlb.
+    * apply IHlb.
+    * apply IHlb.
+    + simpl.
+    rewrite update_not_same by omega.
+    destruct (pl lb); try destruct p0; try apply IHlb.
+    destruct (EqNat.beq_nat addr a); try apply IHlb; try omega.
+Qed.
 
 Inductive rel_promising : TID -> (View -> option Promise) -> list Event -> LocalState -> Prop :=
 | PA_EMPTY : forall tid lp, rel_promising tid lp [] initstate
