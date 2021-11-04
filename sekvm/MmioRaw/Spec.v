@@ -1,3 +1,4 @@
+(* SPDX-License-Identifier: GPL-2.0 *)
 Require Import Coqlib.
 Require Import Maps.
 Require Import Integers.

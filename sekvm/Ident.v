@@ -1,3 +1,4 @@
+(* SPDX-License-Identifier: GPL-2.0 *)
 Require Import Coqlib.
 
 Definition host_hvc_handler := 1000001%positive.

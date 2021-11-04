@@ -1,3 +1,4 @@
+(* SPDX-License-Identifier: GPL-2.0 *)
 Require Import List.
 Import ListNotations.
 (* From RecordUpdate Require Import RecordSet. *)

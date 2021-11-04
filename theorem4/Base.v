@@ -1,3 +1,4 @@
+(* SPDX-License-Identifier: GPL-2.0 *)
 Require Import List.
 Require Import Bool.
 Require Import NArith PArith ZArith.
